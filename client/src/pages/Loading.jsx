@@ -49,19 +49,10 @@ const Loading = () => {
                     backgroundPosition: 'center'
                 }}
             >
-                <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+                <div className="absolute inset-0 bg-black/40"></div>
             </div>
 
             <div className="relative z-10 flex flex-col items-center">
-                <motion.div
-                    initial={{ y: -20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ duration: 0.8 }}
-                    className="mb-8 text-white text-6xl font-bold tracking-tighter"
-                >
-                    Holiday<span className="text-primary">.lk</span>
-                </motion.div>
-
                 <motion.div
                     animate={{ 
                         x: [0, 200],
@@ -73,12 +64,12 @@ const Loading = () => {
                         ease: "easeInOut",
                         repeat: Infinity 
                     }}
-                    className="text-white text-4xl mb-12"
+                    className="text-white text-6xl mb-12 drop-shadow-2xl"
                 >
                     <FaPlane />
                 </motion.div>
 
-                <div className="w-64 h-2 bg-white/20 rounded-full overflow-hidden mb-4">
+                <div className="w-64 h-2 bg-white/20 rounded-full overflow-hidden mb-4 shadow-lg">
                     <motion.div 
                         className="h-full bg-primary"
                         initial={{ width: 0 }}
@@ -86,14 +77,6 @@ const Loading = () => {
                         transition={{ duration: 0.5 }}
                     />
                 </div>
-
-                <motion.p
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="text-white font-medium tracking-wide"
-                >
-                    Preparing your dream vacation...
-                </motion.p>
             </div>
         </motion.div>
     );

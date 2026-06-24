@@ -1,125 +1,288 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
-import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaGoogle } from 'react-icons/fa';
+import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaGoogle, FaPlane, FaPassport, FaCamera, FaCompass, FaFacebook, FaApple, FaGlobe, FaPalette, FaMoon, FaSun } from 'react-icons/fa';
+import { GiPalmTree } from 'react-icons/gi';
 import bluePlantIllustration from '../assets/blue-plant-illustration.png';
+import GoogleAccountModal from '../components/GoogleAccountModal';
 
 const Login = () => {
     const navigate = useNavigate();
     const [showPassword, setShowPassword] = useState(false);
+    const [mode, setMode] = useState(localStorage.getItem('mode') || 'dark');
+    const [theme, setTheme] = useState(localStorage.getItem('selectedTheme') || 'theme-blue');
+    const [lang, setLang] = useState(localStorage.getItem('lang') || 'EN');
+    
+    // Google Account Modal State
+    const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);
+    const [savedAccounts, setSavedAccounts] = useState(() => {
+        const saved = localStorage.getItem('googleSavedAccounts');
+        return saved ? JSON.parse(saved) : [];
+    });
+
+    // Helper to decode Google JWT
+    const decodeJwt = (token) => {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+    };
+
     const [formData, setFormData] = useState({
         email: '',
         password: ''
     });
+    const [errors, setErrors] = useState({});
+
+    useEffect(() => {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('selectedTheme', theme);
+    }, [theme]);
+
+    useEffect(() => {
+        localStorage.setItem('mode', mode);
+    }, [mode]);
+
+    useEffect(() => {
+        localStorage.setItem('lang', lang);
+    }, [lang]);
+
+    useEffect(() => {
+        localStorage.setItem('googleSavedAccounts', JSON.stringify(savedAccounts));
+    }, [savedAccounts]);
+
+    const translations = {
+        EN: { title: 'Sign In', sub: 'Welcome back to Holiday.lk', register: "Don't have an account?", regBtn: 'Sign Up', or: 'Or continue with', fields: { email: 'EMAIL ADDRESS', pass: 'PASSWORD' }, forgot: 'Forgot Password?', remember: 'Remember Me' },
+        SI: { title: 'පුරනය වන්න', sub: 'Holiday.lk වෙත නැවත සාදරයෙන් පිළිගනිමු', register: "ගිණුමක් නොමැතිද?", regBtn: 'ලියාපදිංචි වන්න', or: 'නැතහොත් මඟින් දිගටම කරගෙන යන්න', fields: { email: 'විද්‍යුත් තැපෑල', pass: 'මුරපදය' }, forgot: 'මුරපදය අමතක වූවාද?', remember: 'මතක තබා ගන්න' },
+        TA: { title: 'உள்நுழைக', sub: 'Holiday.lk இற்கு மீண்டும் வருக', register: "கணக்கு இல்லையா?", regBtn: 'பதிவு செய்யுங்கள்', or: 'அல்லது மூலம் தொடரவும்', fields: { email: 'மின்னஞ்சல் முகவரி', pass: 'கடவுச்சொல்' }, forgot: 'கடவுச்சொல் மறந்துவிட்டதா?', remember: 'என்னை நியாபகம் வை' }
+    };
+
+    const validate = () => {
+        let newErrors = {};
+        if (!formData.email) {
+            newErrors.email = 'Email is required';
+        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+            newErrors.email = 'Email is invalid';
+        }
+        if (!formData.password) {
+            newErrors.password = 'Password is required';
+        }
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setFormData({ ...formData, [name]: value });
+        if (errors[name]) {
+            setErrors({ ...errors, [name]: '' });
+        }
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        console.log('Logging in:', formData);
-        navigate('/loading?to=/welcome');
+        if (validate()) {
+            navigate('/loading?to=/welcome');
+        }
     };
 
+    const handleGoogleLoginTrigger = () => {
+        if (savedAccounts.length > 0) {
+            setIsGoogleModalOpen(true);
+        } else {
+            triggerRealGoogleLogin();
+        }
+    };
+
+    const triggerRealGoogleLogin = () => {
+        const CLIENT_ID = "441591192542-loooluor02nliv4gbdf87rh1bl50hag8.apps.googleusercontent.com";
+
+        if (window.google) {
+            const client = window.google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: 'openid email profile',
+                callback: async (tokenResponse) => {
+                    if (tokenResponse.access_token) {
+                        try {
+                            const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                                headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+                            });
+                            const userData = await res.json();
+
+                            const newAccount = {
+                                name: userData.name,
+                                email: userData.email,
+                                profilePic: userData.picture,
+                                isSelected: true
+                            };
+
+                            setSavedAccounts(prev => {
+                                const updated = prev.find(acc => acc.email === newAccount.email)
+                                    ? prev : [...prev, newAccount];
+                                localStorage.setItem('googleSavedAccounts', JSON.stringify(updated));
+                                return updated;
+                            });
+
+                            setFormData(prev => ({ ...prev, email: userData.email }));
+                            setIsGoogleModalOpen(false);
+                            setTimeout(() => navigate('/loading?to=/welcome'), 800);
+                        } catch (err) {
+                            console.error('Failed to fetch user info:', err);
+                            alert('Google login failed. Please try again.');
+                        }
+                    }
+                }
+            });
+            client.requestAccessToken({ prompt: 'select_account' });
+        } else {
+            alert("Google Sign-In is still loading. Please refresh and try again.");
+        }
+    };
+
+    const handleGoogleSelect = (account) => {
+        setSavedAccounts(prev => prev.map(acc => ({
+            ...acc,
+            isSelected: acc.email === account.email
+        })));
+
+        setFormData(prev => ({ ...prev, email: account.email }));
+        setIsGoogleModalOpen(false);
+        setTimeout(() => navigate('/loading?to=/welcome'), 800);
+    };
+
+    const handleAddAccount = () => {
+        setIsGoogleModalOpen(false);
+        triggerRealGoogleLogin();
+    };
+
+    const iconsData = [
+        { Icon: FaPlane, size: 80, delay: 0 },
+        { Icon: FaPlane, size: 40, delay: 5 },
+        { Icon: FaPassport, size: 60, delay: 2 },
+        { Icon: FaCamera, size: 50, delay: 4 },
+        { Icon: GiPalmTree, size: 100, delay: 1 },
+        { Icon: GiPalmTree, size: 70, delay: 7 },
+        { Icon: FaCompass, size: 120, delay: 3 },
+    ];
+
+    const particles = Array.from({ length: 20 });
+    const t = translations[lang];
+
     return (
-        <div className="min-h-screen w-full flex items-center justify-center p-4 md:p-10 bg-gradient-to-br from-[#E0F2FE] via-[#F0F9FF] to-[#DBEAFE] font-poppins relative overflow-hidden">
-            {/* Background Decorative Circles */}
-            <div className="absolute top-[-10%] right-[-10%] w-[40vw] h-[40vw] bg-blue-200/40 rounded-full blur-[100px]" />
-            <div className="absolute bottom-[-10%] left-[-10%] w-[30vw] h-[30vw] bg-sky-100/50 rounded-full blur-[100px]" />
+        <div className={`min-h-screen w-full flex items-center justify-center p-4 md:p-10 font-poppins relative overflow-hidden transition-all duration-500 ${mode === 'dark' ? 'bg-theme-grad' : 'bg-slate-50'}`}>
+            
+            <GoogleAccountModal 
+                isOpen={isGoogleModalOpen} 
+                onClose={() => setIsGoogleModalOpen(false)} 
+                onSelect={handleGoogleSelect}
+                savedAccounts={savedAccounts}
+                onAddAccount={handleAddAccount}
+            />
+
+            <AnimatePresence>
+                {mode === 'dark' && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 pointer-events-none">
+                        <div className="absolute inset-0 z-0 opacity-10">
+                            <div className="absolute bottom-0 left-0 w-full overflow-hidden leading-[0]">
+                                <svg className="relative block w-[calc(100%+1.3px)] h-[150px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                                    <motion.path animate={{ x: [-10, 10, -10] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }} d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" className="fill-white/30"/>
+                                </svg>
+                            </div>
+                        </div>
+                        {particles.map((_, i) => (
+                            <motion.div key={`particle-${i}`} className="absolute rounded-full bg-white/15 z-0" initial={{ width: Math.random() * 6 + 2, height: Math.random() * 6 + 2, x: Math.random() * 100 + "%", y: Math.random() * 100 + "%", opacity: Math.random() * 0.1 + 0.1 }} animate={{ y: ["-10%", "110%"], x: ["0%", (Math.random() * 20 - 10) + "%"], opacity: [0.1, 0.2, 0.1] }} transition={{ duration: Math.random() * 10 + 10, repeat: Infinity, ease: "linear" }} />
+                        ))}
+                        {iconsData.map((item, i) => (
+                            <motion.div key={`icon-${i}`} className="absolute text-white/10 z-0" initial={{ x: (i * 15 + Math.random() * 10) + "%", y: (i * 12 + Math.random() * 10) + "%", rotate: Math.random() * 360 }} animate={{ y: ["-5%", "5%"], rotate: [0, 10, -10, 0], scale: [1, 1.05, 1] }} transition={{ duration: Math.random() * 5 + 8, repeat: Infinity, delay: item.delay, ease: "easeInOut" }}>
+                                <item.Icon size={item.size} />
+                            </motion.div>
+                        ))}
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <motion.div 
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="relative flex flex-col lg:flex-row w-full max-w-5xl bg-white/30 backdrop-blur-3xl rounded-[3rem] border border-white/50 shadow-2xl overflow-hidden"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8 }}
+                className={`relative flex flex-col lg:flex-row w-full max-w-5xl rounded-[3rem] border shadow-2xl overflow-hidden transition-all duration-500 ${mode === 'dark' ? 'bg-white/10 backdrop-blur-2xl border-white/20' : 'bg-white/80 backdrop-blur-md border-slate-200'}`}
             >
-                {/* Form Section */}
-                <div className="w-full lg:w-3/5 p-8 md:p-14 flex flex-col justify-center">
-                    <div className="mb-10 text-center lg:text-left">
-                        <motion.h2 
-                            initial={{ y: -20, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            className="text-4xl font-bold text-blue-900 mb-2"
-                        >
-                            Sign In
-                        </motion.h2>
-                        <p className="text-blue-600/70 text-sm font-medium uppercase tracking-widest">Welcome back to Holiday.lk</p>
+                <div className="w-full lg:w-3/5 p-8 md:p-14 flex flex-col justify-center relative">
+                    <div className="absolute top-6 left-8 right-8 flex justify-between items-center z-30">
+                        <div className="flex gap-2">
+                            {['SI', 'EN', 'TA'].map(l => (
+                                <button key={l} onClick={() => setLang(l)} className={`px-3 py-1.5 text-[10px] font-bold rounded-full border transition-all ${lang === l ? 'bg-theme-btn text-white border-transparent' : mode === 'dark' ? 'bg-white/5 border-white/10 text-teal-200 hover:bg-white/10' : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'}`}>{l}</button>
+                            ))}
+                        </div>
+                        <div className="flex gap-3 items-center">
+                            <div className="flex gap-1.5 p-1 bg-black/10 rounded-full backdrop-blur-sm border border-white/5">
+                                <button onClick={() => setTheme('theme-blue')} className={`w-3.5 h-3.5 rounded-full bg-blue-500 transition-transform ${theme === 'theme-blue' ? 'scale-125 ring-2 ring-white ring-offset-1 ring-offset-transparent' : 'opacity-60 hover:opacity-100'}`} title="Blue Theme" />
+                                <button onClick={() => setTheme('theme-green')} className={`w-3.5 h-3.5 rounded-full bg-emerald-500 transition-transform ${theme === 'theme-green' ? 'scale-125 ring-2 ring-white ring-offset-1 ring-offset-transparent' : 'opacity-60 hover:opacity-100'}`} title="Green Theme" />
+                                <button onClick={() => setTheme('theme-purple')} className={`w-3.5 h-3.5 rounded-full bg-purple-500 transition-transform ${theme === 'theme-purple' ? 'scale-125 ring-2 ring-white ring-offset-1 ring-offset-transparent' : 'opacity-60 hover:opacity-100'}`} title="Purple Theme" />
+                            </div>
+                            <button className={`p-2 rounded-full transition-all ${mode === 'dark' ? 'bg-white/5 text-yellow-400 hover:bg-white/10' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`} onClick={() => setMode(mode === 'dark' ? 'light' : 'dark')}>{mode === 'dark' ? <FaSun size={14} /> : <FaMoon size={14} />}</button>
+                        </div>
+                    </div>
+
+                    <div className="mb-10 mt-6 text-center lg:text-left">
+                        <motion.h2 className={`text-4xl font-bold mb-2 ${mode === 'dark' ? 'text-white' : 'text-slate-900'}`}>{t.title}</motion.h2>
+                        <p className={`text-sm font-medium uppercase tracking-widest ${mode === 'dark' ? 'text-teal-200 opacity-60' : 'text-slate-500'}`}>{t.sub}</p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-8">
-                        <InputLine 
-                            icon={<FaEnvelope />} 
-                            label="Email Address" 
-                            name="email" 
-                            type="email" 
-                            placeholder="name@example.com" 
-                            onChange={handleChange} 
-                        />
+                        <InputLine icon={<FaEnvelope />} label={t.fields.email} name="email" type="email" placeholder="name@example.com" value={formData.email} onChange={handleChange} error={errors.email} mode={mode} />
 
                         <div className="relative">
-                            <InputLine 
-                                icon={<FaLock />} 
-                                label="Password" 
-                                name="password" 
-                                type={showPassword ? "text" : "password"} 
-                                placeholder="••••••••" 
-                                onChange={handleChange} 
-                            />
-                            <button 
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-0 bottom-2 text-blue-400 hover:text-blue-600"
-                            >
-                                {showPassword ? <FaEyeSlash /> : <FaEye />}
-                            </button>
+                            <InputLine icon={<FaLock />} label={t.fields.pass} name="password" type={showPassword ? "text" : "password"} placeholder="••••••••" value={formData.password} onChange={handleChange} error={errors.password} mode={mode} />
+                            <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-0 bottom-2 text-teal-300/50 hover:text-teal-300 p-2"><AnimatePresence mode="wait">{showPassword ? <motion.div key="eye-slash" initial={{scale:0}} animate={{scale:1}}><FaEyeSlash size={14}/></motion.div> : <motion.div key="eye" initial={{scale:0}} animate={{scale:1}}><FaEye size={14}/></motion.div>}</AnimatePresence></button>
                         </div>
 
                         <div className="flex items-center justify-between text-sm">
-                            <label className="flex items-center gap-2 cursor-pointer text-blue-600/70 font-medium">
-                                <input type="checkbox" className="w-4 h-4 rounded border-blue-200 text-blue-600 focus:ring-blue-500" />
-                                <span>Remember Me</span>
+                            <label className="flex items-center gap-2 cursor-pointer opacity-70">
+                                <input type="checkbox" className={`w-4 h-4 rounded border-transparent ${mode === 'dark' ? 'bg-white/10 text-theme-btn' : 'bg-slate-100 text-slate-900'}`} />
+                                <span className={mode === 'dark' ? 'text-white' : 'text-slate-600'}>{t.remember}</span>
                             </label>
-                            <Link to="#" className="text-blue-800 font-bold hover:underline">Forgot Password?</Link>
+                            <Link to="#" className={`font-bold hover:underline ${mode === 'dark' ? 'text-white' : 'text-slate-900'}`}>{t.forgot}</Link>
                         </div>
 
-                        <div className="pt-4 flex flex-col items-center gap-4">
-                            <button 
-                                type="submit" 
-                                className="w-full md:w-64 py-4 rounded-full bg-gradient-to-r from-blue-600 to-sky-500 text-white font-bold text-lg shadow-xl shadow-blue-200 hover:shadow-blue-400/40 transition-all transform hover:scale-105 active:scale-95"
-                            >
-                                Login
-                            </button>
+                        <div className="pt-4 flex flex-col items-center">
+                            <button type="submit" className="w-full py-4 rounded-xl bg-theme-btn text-white font-bold text-lg shadow-xl hover:brightness-110 transition-all transform hover:scale-[1.02] active:scale-[0.98]">Login</button>
 
-                            <button 
-                                type="button" 
-                                className="w-full md:w-64 py-3 rounded-full border-2 border-blue-100 flex items-center justify-center gap-2 text-blue-600 font-bold hover:bg-blue-50 transition-all mt-2"
-                            >
-                                <FaGoogle className="text-red-500" /> Google
-                            </button>
+                            <div className="mt-6 flex flex-col items-center gap-4 w-full">
+                                <div className="flex items-center gap-4 w-full px-4 opacity-30">
+                                    <div className={`h-px flex-grow ${mode === 'dark' ? 'bg-white' : 'bg-slate-900'}`}></div>
+                                    <span className="text-[10px] uppercase font-bold tracking-widest">{t.or}</span>
+                                    <div className={`h-px flex-grow ${mode === 'dark' ? 'bg-white' : 'bg-slate-900'}`}></div>
+                                </div>
+                                
+                                <button 
+                                    type="button"
+                                    onClick={handleGoogleLoginTrigger}
+                                    className="w-full h-[52px] bg-white border border-[#e0e0e0] rounded-xl flex items-center justify-center gap-3 px-6 hover:bg-[#f5f5f5] transition-all duration-200 group shadow-sm active:scale-[0.98]"
+                                >
+                                    <FaGoogle className="text-[#4285F4] text-xl" />
+                                    <span className="text-[16px] font-medium text-[#5f6368]">Continue with Google</span>
+                                </button>
+
+                                <div className="flex justify-center gap-4">
+                                    <SocialButton icon={<FaFacebook className="text-[#1877F2]" />} mode={mode} />
+                                    <SocialButton icon={<FaApple className={mode === 'dark' ? 'text-white' : 'text-[#202124]'} />} mode={mode} />
+                                </div>
+                            </div>
                             
-                            <p className="mt-4 text-sm font-medium text-blue-600/70">
-                                Don't have an account? <Link to="/register" className="text-blue-800 font-bold hover:underline">Sign Up</Link>
+                            <p className="mt-8 text-sm font-medium opacity-70">
+                                {t.register} <Link to="/register" className={`font-bold hover:underline ${mode === 'dark' ? 'text-white' : 'text-slate-900'}`}>{t.regBtn}</Link>
                             </p>
                         </div>
                     </form>
                 </div>
 
-                {/* Illustration Section */}
-                <div className="hidden lg:flex w-2/5 relative bg-gradient-to-br from-blue-700 to-sky-900 items-center justify-center">
-                    <div className="absolute inset-0 overflow-hidden">
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] bg-[radial-gradient(circle,_rgba(255,255,255,0.1)_0%,_transparent_70%)]" />
-                    </div>
-                    <motion.div
-                        animate={{ y: [0, -15, 0] }}
-                        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                        className="relative z-10 w-full p-10"
-                    >
-                        <div className="bg-white/10 backdrop-blur-md rounded-[3rem] p-4 border border-white/20 shadow-2xl">
-                            <img 
-                                src={bluePlantIllustration} 
-                                alt="Illustration" 
-                                className="w-full rounded-[2.5rem] shadow-inner"
-                            />
+                <div className={`hidden lg:flex w-2/5 relative items-center justify-center p-12 ${mode === 'dark' ? 'bg-white/5' : 'bg-slate-100'}`}>
+                    <motion.div animate={{ y: [0, -15, 0] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }} className="w-full relative z-10">
+                        <div className={`rounded-[3rem] p-4 border shadow-2xl ${mode === 'dark' ? 'bg-white/5 backdrop-blur-md border-white/10' : 'bg-white border-slate-200'}`}>
+                            <img src={bluePlantIllustration} alt="Illustration" className="w-full rounded-[2.5rem] opacity-90 shadow-inner" />
                         </div>
                     </motion.div>
                 </div>
@@ -128,22 +291,20 @@ const Login = () => {
     );
 };
 
-const InputLine = ({ icon, label, name, type, placeholder, onChange }) => (
-    <div className="relative border-b-2 border-blue-100/50 focus-within:border-blue-500 transition-all pb-2 group">
-        <label className="text-[10px] font-bold text-blue-400 uppercase tracking-widest pl-1 block mb-1">{label}</label>
-        <div className="flex items-center gap-3">
-            <input 
-                type={type} 
-                name={name}
-                placeholder={placeholder}
-                required
-                onChange={onChange}
-                className="w-full bg-transparent text-blue-900 placeholder-blue-300 focus:outline-none font-medium py-1"
-            />
-            <div className="text-blue-300 group-focus-within:text-blue-500 transition-colors pr-1">
-                {icon}
-            </div>
+const SocialButton = ({ icon, mode }) => (
+    <button className={`p-3.5 border rounded-2xl transition-all transform hover:scale-110 active:scale-90 text-xl shadow-sm ${mode === 'dark' ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-white border-slate-200 hover:bg-slate-50'}`}>
+        {icon}
+    </button>
+);
+
+const InputLine = ({ icon, label, name, type, placeholder, value, onChange, error, mode }) => (
+    <div className="relative pb-1 group flex flex-col">
+        <label className={`text-[10px] font-bold uppercase tracking-widest pl-1 mb-1 transition-colors ${error ? 'text-red-400' : mode === 'dark' ? 'text-teal-300' : 'text-slate-500'}`}>{label}</label>
+        <div className={`flex items-center gap-3 border-b-2 transition-all ${error ? 'border-red-400/50' : mode === 'dark' ? 'border-white/10 focus-within:border-teal-400' : 'border-slate-200 focus-within:border-slate-400'}`}>
+            <input type={type} name={name} placeholder={placeholder} value={value} onChange={onChange} className={`w-full bg-transparent font-medium py-2 focus:outline-none placeholder:opacity-30 ${mode === 'dark' ? 'text-white placeholder:text-white' : 'text-slate-900 placeholder:text-slate-400'}`} />
+            <div className={`transition-colors pr-1 ${error ? 'text-red-400' : mode === 'dark' ? 'text-teal-300/40 group-focus-within:text-teal-300' : 'text-slate-400 group-focus-within:text-slate-600'}`}>{icon}</div>
         </div>
+        <AnimatePresence>{error && <motion.span initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="text-[10px] text-red-400 mt-1 font-bold pl-1">{error}</motion.span>}</AnimatePresence>
     </div>
 );
 

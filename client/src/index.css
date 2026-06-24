@@ -6,6 +6,49 @@
 
 :root {
   font-family: 'Poppins', sans-serif;
+  
+  /* Theme Transitions */
+  --transition-speed: 400ms;
+  --transition-timing: ease-in-out;
+  
+  /* Default Blue Theme */
+  --primary-grad-start: #0047AB;
+  --primary-grad-end: #20B2AA;
+  --primary-color: #0047AB;
+  --secondary-color: #20B2AA;
+  --accent-color: #17A2B8;
+  --btn-color: #0056CC;
+  --input-border: #17A2B8;
+  --text-active: #FFFFFF;
+}
+
+[data-theme='theme-green'] {
+  --primary-grad-start: #1B5E20;
+  --primary-grad-end: #00897B;
+  --primary-color: #1B5E20;
+  --secondary-color: #00897B;
+  --accent-color: #26A69A;
+  --btn-color: #00695C;
+  --input-border: #26A69A;
+}
+
+[data-theme='theme-purple'] {
+  --primary-grad-start: #4A148C;
+  --primary-grad-end: #7B1FA2;
+  --primary-color: #4A148C;
+  --secondary-color: #7B1FA2;
+  --accent-color: #9C27B0;
+  --btn-color: #6A1B9A;
+  --input-border: #9C27B0;
+}
+
+/* Global Transitions */
+* {
+  transition: background-color var(--transition-speed) var(--transition-timing),
+              background-image var(--transition-speed) var(--transition-timing),
+              border-color var(--transition-speed) var(--transition-timing),
+              color var(--transition-speed) var(--transition-timing),
+              box-shadow var(--transition-speed) var(--transition-timing);
 }
 
 body {
@@ -14,21 +57,26 @@ body {
 }
 
 .glass {
-  @apply bg-white bg-opacity-20 backdrop-blur-lg border border-white border-opacity-30 rounded-2xl;
+  @apply bg-white bg-opacity-10 backdrop-blur-xl border border-white border-opacity-20 rounded-3xl transition-all;
 }
 
-.btn-primary {
-  @apply bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-opacity-90 transition-all duration-300 shadow-lg hover:shadow-primary/40;
+/* Custom Theme Support Utility Classes */
+.bg-theme-grad {
+  background: linear-gradient(135deg, var(--primary-grad-start), var(--primary-grad-end));
 }
 
-.btn-secondary {
-  @apply bg-secondary text-white px-6 py-3 rounded-lg font-semibold hover:bg-opacity-90 transition-all duration-300 shadow-lg hover:shadow-secondary/40;
+.text-theme-accent {
+  color: var(--accent-color);
 }
 
-.btn-accent {
-  @apply bg-accent text-white px-6 py-3 rounded-lg font-semibold hover:bg-opacity-90 transition-all duration-300 shadow-lg hover:shadow-accent/40;
+.border-theme-accent {
+  border-color: var(--input-border);
+}
+
+.bg-theme-btn {
+  background-color: var(--btn-color);
 }
 
 input {
-  @apply w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 bg-white/50 backdrop-blur-sm;
+  @apply w-full px-4 py-3 rounded-lg border border-white/10 focus:outline-none focus:ring-1 focus:ring-white/20 transition-all duration-300 bg-white/5 backdrop-blur-sm text-white;
 }
