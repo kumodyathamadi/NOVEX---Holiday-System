@@ -4,6 +4,8 @@ import Loading from './pages/Loading';
 import Register from './pages/Register';
 import Welcome from './pages/Welcome';
 import Login from './pages/Login';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import { AnimatePresence } from 'framer-motion';
 
 function App() {
@@ -16,6 +18,8 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/welcome" element={<Welcome />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
         </Routes>
       </AnimatePresence>
     </div>

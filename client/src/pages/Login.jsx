@@ -81,10 +81,31 @@ const Login = () => {
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (validate()) {
-            navigate('/loading?to=/welcome');
+            try {
+                const response = await fetch('http://localhost:5001/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: formData.email,
+                        password: formData.password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    localStorage.setItem('registeredUser', data.user.fullName);
+                    navigate('/loading?to=/welcome');
+                } else {
+                    alert(data.error || 'Login failed');
+                }
+            } catch (error) {
+                console.error("Login Error:", error);
+                alert('Connection to server failed. Please try again.');
+            }
         }
     };
 
@@ -244,7 +265,7 @@ const Login = () => {
                                 <input type="checkbox" className={`w-4 h-4 rounded border-transparent ${mode === 'dark' ? 'bg-white/10 text-theme-btn' : 'bg-slate-100 text-slate-900'}`} />
                                 <span className={mode === 'dark' ? 'text-white' : 'text-slate-600'}>{t.remember}</span>
                             </label>
-                            <Link to="#" className={`font-bold hover:underline ${mode === 'dark' ? 'text-white' : 'text-slate-900'}`}>{t.forgot}</Link>
+                            <Link to="/forgot-password" className={`font-bold hover:underline ${mode === 'dark' ? 'text-white' : 'text-slate-900'}`}>{t.forgot}</Link>
                         </div>
 
                         <div className="pt-4 flex flex-col items-center">

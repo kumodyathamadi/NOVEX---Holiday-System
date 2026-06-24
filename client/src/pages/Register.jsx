@@ -93,11 +93,34 @@ const Register = () => {
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (validate()) {
-            localStorage.setItem('registeredUser', formData.fullName);
-            navigate('/welcome');
+            try {
+                const response = await fetch('http://localhost:5001/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        fullName: formData.fullName,
+                        email: formData.email,
+                        phone: formData.contactNo,
+                        birthday: formData.birthday,
+                        password: formData.password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    localStorage.setItem('registeredUser', formData.fullName);
+                    navigate('/welcome');
+                } else {
+                    alert(data.error || 'Registration failed');
+                }
+            } catch (error) {
+                console.error("Registration Error:", error);
+                alert('Connection to server failed. Please try again.');
+            }
         }
     };
 
