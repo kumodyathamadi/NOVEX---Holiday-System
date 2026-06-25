@@ -174,69 +174,60 @@ const Register = () => {
     };
 
     const triggerRealGoogleLogin = () => {
-        const CLIENT_ID = "441591192542-loooluor02nliv4gbdf87rh1bl50hag8.apps.googleusercontent.com";
+        const CLIENT_ID = "434749338448-0gaqr0ado21jnr4obahie9nnp5t6d1un.apps.googleusercontent.com";
         
         if (window.google) {
-            // Use the sign-in popup approach — more reliable than One Tap for localhost dev
-            const client = window.google.accounts.oauth2.initTokenClient({
+            window.google.accounts.id.initialize({
                 client_id: CLIENT_ID,
-                scope: 'openid email profile',
-                callback: async (tokenResponse) => {
-                    if (tokenResponse.access_token) {
-                        // Fetch user info using the access token
-                        try {
-                            const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                                headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+                callback: async (response) => {
+                    const userData = decodeJwt(response.credential);
+                    
+                    try {
+                        // Save to Database
+                        const backendRes = await fetch('http://localhost:5001/api/auth/google-login', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                fullName: userData.name,
+                                email: userData.email
+                            })
+                        });
+
+                        const backendData = await backendRes.json();
+
+                        if (backendData.success) {
+                            const newAccount = {
+                                name: userData.name,
+                                email: userData.email,
+                                profilePic: userData.picture,
+                                isSelected: true
+                            };
+
+                            setSavedAccounts(prev => {
+                                const updated = prev.find(acc => acc.email === newAccount.email)
+                                    ? prev : [...prev, newAccount];
+                                localStorage.setItem('googleSavedAccounts', JSON.stringify(updated));
+                                return updated;
                             });
-                            const userData = await res.json();
 
-                            // Save to Database
-                            const backendRes = await fetch('http://localhost:5001/api/auth/google-login', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    fullName: userData.name,
-                                    email: userData.email
-                                })
-                            });
+                            setFormData(prev => ({
+                                ...prev,
+                                fullName: userData.name,
+                                email: userData.email
+                            }));
 
-                            const backendData = await backendRes.json();
-
-                            if (backendData.success) {
-                                const newAccount = {
-                                    name: userData.name,
-                                    email: userData.email,
-                                    profilePic: userData.picture,
-                                    isSelected: true
-                                };
-
-                                setSavedAccounts(prev => {
-                                    const updated = prev.find(acc => acc.email === newAccount.email)
-                                        ? prev : [...prev, newAccount];
-                                    localStorage.setItem('googleSavedAccounts', JSON.stringify(updated));
-                                    return updated;
-                                });
-
-                                setFormData(prev => ({
-                                    ...prev,
-                                    fullName: userData.name,
-                                    email: userData.email
-                                }));
-
-                                setIsGoogleModalOpen(false);
-                                localStorage.setItem('registeredUser', userData.name);
-                                setTimeout(() => navigate('/welcome'), 800);
-                            } else {
-                                alert(backendData.error || 'Backend synchronization failed');
-                            }
-                        } catch (err) {
-                            console.error('Failed to fetch user info:', err);
-                            alert('Google login failed. Please try again.');
+                            setIsGoogleModalOpen(false);
+                            localStorage.setItem('registeredUser', userData.name);
+                            setTimeout(() => navigate('/welcome'), 800);
+                        } else {
+                            alert(backendData.error || 'Backend synchronization failed');
                         }
+                    } catch (err) {
+                        console.error('Backend sync error:', err);
                     }
                 }
             });
-            client.requestAccessToken({ prompt: 'select_account' });
+            window.google.accounts.id.prompt();
         } else {
             alert("Google Sign-In is still loading. Please refresh and try again.");
         }
