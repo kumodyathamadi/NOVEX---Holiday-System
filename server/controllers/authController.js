@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
+import nodemailer from 'nodemailer';
 import User from '../models/User.js';
 
 // @desc    Register user
@@ -7,6 +8,42 @@ import User from '../models/User.js';
 export const register = async (req, res, next) => {
     try {
         const { fullName, email, password, phone, birthday } = req.body;
+
+        // Validations
+        if (!fullName || !email || !password || !phone || !birthday) {
+            return res.status(400).json({ success: false, error: 'Please provide all fields' });
+        }
+
+        if (!/^[a-zA-Z\s]{3,}$/.test(fullName)) {
+            return res.status(400).json({ success: false, error: 'Full name must be at least 3 characters and contain only letters and spaces' });
+        }
+
+        const birthDate = new Date(birthday);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+        if (age < 18) {
+            return res.status(400).json({ success: false, error: 'User must be at least 18 years old' });
+        }
+
+        if (!/^\+94\s\d{2}\s\d{3}\s\d{4}$/.test(phone)) {
+            return res.status(400).json({ success: false, error: 'Contact number must be in Sri Lankan format (+94 XX XXX XXXX)' });
+        }
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return res.status(400).json({ success: false, error: 'Please provide a valid email' });
+        }
+
+        if (password.length < 8 || !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/.test(password)) {
+            return res.status(400).json({ success: false, error: 'Password must be at least 8 characters and contain 1 uppercase, 1 lowercase, 1 number, and 1 special character' });
+        }
+
+        // Check if user exists
+        const userExists = await User.findOne({ email });
+        if (userExists) {
+            return res.status(400).json({ success: false, error: 'User already exists' });
+        }
 
         // Hash password
         const salt = await bcrypt.genSalt(10);
@@ -70,7 +107,7 @@ export const forgotPassword = async (req, res, next) => {
 
         if (!user) {
             // Requirement: Do not reveal if email exists
-            return res.status(200).json({ success: true, message: 'Email sent' });
+            return res.status(200).json({ success: true, message: 'If an account exists, a reset link has been sent.' });
         }
 
         // Generate reset token
@@ -82,16 +119,51 @@ export const forgotPassword = async (req, res, next) => {
         user.resetPasswordExpires = resetPasswordExpires;
         await user.save();
 
-        // In a real app, you would use nodemailer here. 
-        // For this task, we return the link for testing.
         const resetUrl = `http://localhost:5173/reset-password?token=${resetToken}`;
-        console.log('Reset URL:', resetUrl);
-
-        res.status(200).json({
-            success: true,
-            message: 'If an account exists, a reset link has been sent.',
-            debugToken: resetToken // Only for development/testing
+        
+        // Email Implementation
+        const transporter = nodemailer.createTransport({
+            service: process.env.EMAIL_SERVICE,
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+            }
         });
+
+        const mailOptions = {
+            from: `"Holiday.lk Support" <${process.env.EMAIL_USER}>`,
+            to: user.email,
+            subject: 'Password Reset Request',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
+                    <h2 style="color: #333 text-align: center;">Holiday.lk Password Reset</h2>
+                    <p>Hello ${user.fullName},</p>
+                    <p>You are receiving this email because you (or someone else) have requested the reset of a password for your account.</p>
+                    <p>Please click on the following link to complete the process:</p>
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="${resetUrl}" style="background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Reset Password</a>
+                    </div>
+                    <p>If you did not request this, please ignore this email and your password will remain unchanged.</p>
+                    <p>This link will expire in 30 minutes.</p>
+                    <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+                    <p style="font-size: 12px; color: #777; text-align: center;">&copy; 2026 Holiday.lk. All rights reserved.</p>
+                </div>
+            `
+        };
+
+        try {
+            await transporter.sendMail(mailOptions);
+            res.status(200).json({
+                success: true,
+                message: 'If an account exists, a reset link has been sent.'
+            });
+        } catch (mailError) {
+            console.error('Email send error:', mailError);
+            res.status(500).json({
+                success: false,
+                error: 'Email could not be sent'
+            });
+        }
     } catch (err) {
         next(err);
     }

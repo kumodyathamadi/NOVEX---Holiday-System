@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
-import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaGoogle, FaPlane, FaPassport, FaCamera, FaCompass, FaFacebook, FaApple, FaGlobe, FaPalette, FaMoon, FaSun } from 'react-icons/fa';
+import { FaEnvelope, FaLock, FaEye, FaEyeSlash, FaGoogle, FaSuitcaseRolling, FaPassport, FaCamera, FaCompass, FaFacebook, FaApple, FaGlobe, FaPalette, FaMoon, FaSun } from 'react-icons/fa';
 import { GiPalmTree } from 'react-icons/gi';
 import bluePlantIllustration from '../assets/blue-plant-illustration.png';
 import GoogleAccountModal from '../components/GoogleAccountModal';
@@ -179,8 +179,8 @@ const Login = () => {
     };
 
     const iconsData = [
-        { Icon: FaPlane, size: 80, delay: 0 },
-        { Icon: FaPlane, size: 40, delay: 5 },
+        { Icon: FaSuitcaseRolling, size: 80, delay: 0 },
+        { Icon: FaSuitcaseRolling, size: 40, delay: 5 },
         { Icon: FaPassport, size: 60, delay: 2 },
         { Icon: FaCamera, size: 50, delay: 4 },
         { Icon: GiPalmTree, size: 100, delay: 1 },
@@ -312,8 +312,8 @@ const Login = () => {
     );
 };
 
-const SocialButton = ({ icon, mode }) => (
-    <button className={`p-3.5 border rounded-2xl transition-all transform hover:scale-110 active:scale-90 text-xl shadow-sm ${mode === 'dark' ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-white border-slate-200 hover:bg-slate-50'}`}>
+const SocialButton = ({ icon, mode, onClick }) => (
+    <button type="button" onClick={onClick} className={`p-3.5 border rounded-2xl transition-all transform hover:scale-110 active:scale-90 text-xl shadow-sm ${mode === 'dark' ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-white border-slate-200 hover:bg-slate-50'}`}>
         {icon}
     </button>
 );

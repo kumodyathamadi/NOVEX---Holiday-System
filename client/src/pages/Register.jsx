@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
-import { FaUser, FaEnvelope, FaPhone, FaLock, FaEye, FaEyeSlash, FaPlane, FaPassport, FaCamera, FaCompass, FaGoogle, FaFacebook, FaApple, FaGlobe, FaPalette, FaMoon, FaSun, FaCalendarAlt } from 'react-icons/fa';
+import { FaUser, FaEnvelope, FaPhone, FaLock, FaEye, FaEyeSlash, FaSuitcaseRolling, FaPassport, FaCamera, FaCompass, FaGoogle, FaFacebook, FaApple, FaGlobe, FaPalette, FaMoon, FaSun, FaCalendarAlt } from 'react-icons/fa';
 import { GiPalmTree } from 'react-icons/gi';
 import bluePlantIllustration from '../assets/blue-plant-illustration.png';
 import GoogleAccountModal from '../components/GoogleAccountModal';
@@ -65,22 +65,63 @@ const Register = () => {
 
     const validate = () => {
         let newErrors = {};
-        if (!formData.fullName) newErrors.fullName = 'Full Name is required';
-        if (!formData.birthday) newErrors.birthday = 'Birthday is required';
-        if (!formData.contactNo) newErrors.contactNo = 'Contact No is required';
+        
+        // Full Name Validation
+        if (!formData.fullName) {
+            newErrors.fullName = 'Full Name is required';
+        } else if (!/^[a-zA-Z\s]+$/.test(formData.fullName)) {
+            newErrors.fullName = 'Should only contain letters and spaces';
+        } else if (formData.fullName.length < 3) {
+            newErrors.fullName = 'Minimum length: 3 characters';
+        }
+
+        // Birthday Validation (18+ years old)
+        if (!formData.birthday) {
+            newErrors.birthday = 'Birthday is required';
+        } else {
+            const birthDate = new Date(formData.birthday);
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const m = today.getMonth() - birthDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            if (age < 18) {
+                newErrors.birthday = 'User must be at least 18 years old';
+            }
+        }
+
+        // Contact Number Validation (Sri Lankan: +94 XX XXX XXXX)
+        if (!formData.contactNo) {
+            newErrors.contactNo = 'Contact Number is required';
+        } else if (!/^\+94\s\d{2}\s\d{3}\s\d{4}$/.test(formData.contactNo)) {
+            newErrors.contactNo = 'Format: +94 XX XXX XXXX';
+        }
+
+        // Email Validation
         if (!formData.email) {
             newErrors.email = 'Email is required';
-        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-            newErrors.email = 'Email is invalid';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+            newErrors.email = 'Invalid email format';
         }
+
+        // Password Validation
+        // Minimum 8 characters, at least one uppercase, one lowercase, one number, one special character
         if (!formData.password) {
             newErrors.password = 'Password is required';
-        } else if (formData.password.length < 6) {
-            newErrors.password = 'Password must be at least 6 characters';
+        } else if (formData.password.length < 8) {
+            newErrors.password = 'Minimum 8 characters';
+        } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/.test(formData.password)) {
+            newErrors.password = 'Must contain: 1 uppercase, 1 lowercase, 1 number, 1 special character';
         }
-        if (formData.confirmPassword !== formData.password) {
-            newErrors.confirmPassword = 'Passwords do not match';
+
+        // Confirm Password Validation
+        if (!formData.confirmPassword) {
+            newErrors.confirmPassword = 'Confirm Password is required';
+        } else if (formData.confirmPassword !== formData.password) {
+            newErrors.confirmPassword = 'Must exactly match the Password';
         }
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -208,8 +249,8 @@ const Register = () => {
     };
 
     const iconsData = [
-        { Icon: FaPlane, size: 80, delay: 0 },
-        { Icon: FaPlane, size: 40, delay: 5 },
+        { Icon: FaSuitcaseRolling, size: 80, delay: 0 },
+        { Icon: FaSuitcaseRolling, size: 40, delay: 5 },
         { Icon: FaPassport, size: 60, delay: 2 },
         { Icon: FaCamera, size: 50, delay: 4 },
         { Icon: GiPalmTree, size: 100, delay: 1 },
@@ -346,8 +387,8 @@ const Register = () => {
     );
 };
 
-const SocialButton = ({ icon, mode }) => (
-    <button className={`p-3.5 border rounded-2xl transition-all transform hover:scale-110 active:scale-90 text-xl shadow-sm ${mode === 'dark' ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-white border-slate-200 hover:bg-slate-50'}`}>
+const SocialButton = ({ icon, mode, onClick }) => (
+    <button type="button" onClick={onClick} className={`p-3.5 border rounded-2xl transition-all transform hover:scale-110 active:scale-90 text-xl shadow-sm ${mode === 'dark' ? 'bg-white/5 border-white/10 hover:bg-white/10' : 'bg-white border-slate-200 hover:bg-slate-50'}`}>
         {icon}
     </button>
 );

@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { FaMapMarkedAlt, FaPlaneDeparture, FaCloud, FaGlassCheers, FaBirthdayCake } from 'react-icons/fa';
+import { FaMapMarkedAlt, FaSuitcaseRolling, FaCloud, FaGlassCheers, FaBirthdayCake } from 'react-icons/fa';
 import { GiPartyPopper, GiBalloons } from 'react-icons/gi';
 import welcomeGif from '../assets/GIF by Pi-Slices.gif';
 
@@ -121,7 +121,7 @@ const Welcome = () => {
                     className="group relative inline-flex items-center justify-center px-12 py-4 font-bold text-white transition-all duration-200 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full hover:from-indigo-600 hover:to-blue-600 shadow-xl shadow-blue-500/30"
                 >
                     <span>Get Started</span>
-                    <FaPlaneDeparture className="ml-3 group-hover:translate-x-2 transition-transform" />
+                    <FaSuitcaseRolling className="ml-3 group-hover:translate-x-2 transition-transform" />
                 </motion.button>
             </motion.div>
         </motion.div>
