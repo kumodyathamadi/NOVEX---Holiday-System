@@ -27,8 +27,8 @@ export const register = async (req, res, next) => {
             return res.status(400).json({ success: false, error: 'User must be at least 18 years old' });
         }
 
-        if (!/^\+94\s\d{2}\s\d{3}\s\d{4}$/.test(phone)) {
-            return res.status(400).json({ success: false, error: 'Contact number must be in Sri Lankan format (+94 XX XXX XXXX)' });
+        if (!/^0\d{9}$/.test(phone)) {
+            return res.status(400).json({ success: false, error: 'Contact number must be a valid 10-digit Sri Lankan number (e.g., 0771234567)' });
         }
 
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -169,8 +169,6 @@ export const forgotPassword = async (req, res, next) => {
     }
 };
 
-// @desc    Reset password
-// @route   POST /api/auth/reset-password
 export const resetPassword = async (req, res, next) => {
     try {
         const resetPasswordToken = crypto.createHash('sha256').update(req.body.token).digest('hex');
@@ -192,6 +190,39 @@ export const resetPassword = async (req, res, next) => {
         await user.save();
 
         res.status(200).json({ success: true, message: 'Password reset successful' });
+    } catch (err) {
+        next(err);
+    }
+};
+
+// @desc    Google Login
+// @route   POST /api/auth/google-login
+export const googleLogin = async (req, res, next) => {
+    try {
+        const { fullName, email } = req.body;
+
+        // Check if user exists
+        let user = await User.findOne({ email });
+
+        if (!user) {
+            // Create user if not exists
+            const salt = await bcrypt.genSalt(10);
+            const randomPassword = crypto.randomBytes(20).toString('hex');
+            const hashedPassword = await bcrypt.hash(randomPassword, salt);
+
+            user = await User.create({
+                fullName,
+                email,
+                password: hashedPassword,
+                // phone and birthday are optional for now
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Google login successful',
+            user: { id: user._id, fullName: user.fullName, email: user.email }
+        });
     } catch (err) {
         next(err);
     }

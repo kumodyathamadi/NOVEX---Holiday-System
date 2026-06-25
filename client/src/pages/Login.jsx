@@ -132,23 +132,40 @@ const Login = () => {
                             });
                             const userData = await res.json();
 
-                            const newAccount = {
-                                name: userData.name,
-                                email: userData.email,
-                                profilePic: userData.picture,
-                                isSelected: true
-                            };
-
-                            setSavedAccounts(prev => {
-                                const updated = prev.find(acc => acc.email === newAccount.email)
-                                    ? prev : [...prev, newAccount];
-                                localStorage.setItem('googleSavedAccounts', JSON.stringify(updated));
-                                return updated;
+                            // Save to Database
+                            const backendRes = await fetch('http://localhost:5001/api/auth/google-login', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    fullName: userData.name,
+                                    email: userData.email
+                                })
                             });
 
-                            setFormData(prev => ({ ...prev, email: userData.email }));
-                            setIsGoogleModalOpen(false);
-                            setTimeout(() => navigate('/loading?to=/welcome'), 800);
+                            const backendData = await backendRes.json();
+
+                            if (backendData.success) {
+                                const newAccount = {
+                                    name: userData.name,
+                                    email: userData.email,
+                                    profilePic: userData.picture,
+                                    isSelected: true
+                                };
+
+                                setSavedAccounts(prev => {
+                                    const updated = prev.find(acc => acc.email === newAccount.email)
+                                        ? prev : [...prev, newAccount];
+                                    localStorage.setItem('googleSavedAccounts', JSON.stringify(updated));
+                                    return updated;
+                                });
+
+                                setFormData(prev => ({ ...prev, email: userData.email }));
+                                setIsGoogleModalOpen(false);
+                                localStorage.setItem('registeredUser', userData.name);
+                                setTimeout(() => navigate('/loading?to=/welcome'), 800);
+                            } else {
+                                alert(backendData.error || 'Backend synchronization failed');
+                            }
                         } catch (err) {
                             console.error('Failed to fetch user info:', err);
                             alert('Google login failed. Please try again.');

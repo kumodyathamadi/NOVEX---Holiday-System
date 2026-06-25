@@ -91,11 +91,11 @@ const Register = () => {
             }
         }
 
-        // Contact Number Validation (Sri Lankan: +94 XX XXX XXXX)
+        // Contact Number Validation (10 digits required)
         if (!formData.contactNo) {
             newErrors.contactNo = 'Contact Number is required';
-        } else if (!/^\+94\s\d{2}\s\d{3}\s\d{4}$/.test(formData.contactNo)) {
-            newErrors.contactNo = 'Format: +94 XX XXX XXXX';
+        } else if (!/^0\d{9}$/.test(formData.contactNo)) {
+            newErrors.contactNo = 'Enter a valid 10-digit number (e.g., 0771234567)';
         }
 
         // Email Validation
@@ -190,29 +190,45 @@ const Register = () => {
                             });
                             const userData = await res.json();
 
-                            const newAccount = {
-                                name: userData.name,
-                                email: userData.email,
-                                profilePic: userData.picture,
-                                isSelected: true
-                            };
-
-                            setSavedAccounts(prev => {
-                                const updated = prev.find(acc => acc.email === newAccount.email)
-                                    ? prev : [...prev, newAccount];
-                                localStorage.setItem('googleSavedAccounts', JSON.stringify(updated));
-                                return updated;
+                            // Save to Database
+                            const backendRes = await fetch('http://localhost:5001/api/auth/google-login', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    fullName: userData.name,
+                                    email: userData.email
+                                })
                             });
 
-                            setFormData(prev => ({
-                                ...prev,
-                                fullName: userData.name,
-                                email: userData.email
-                            }));
+                            const backendData = await backendRes.json();
 
-                            setIsGoogleModalOpen(false);
-                            localStorage.setItem('registeredUser', userData.name);
-                            setTimeout(() => navigate('/welcome'), 800);
+                            if (backendData.success) {
+                                const newAccount = {
+                                    name: userData.name,
+                                    email: userData.email,
+                                    profilePic: userData.picture,
+                                    isSelected: true
+                                };
+
+                                setSavedAccounts(prev => {
+                                    const updated = prev.find(acc => acc.email === newAccount.email)
+                                        ? prev : [...prev, newAccount];
+                                    localStorage.setItem('googleSavedAccounts', JSON.stringify(updated));
+                                    return updated;
+                                });
+
+                                setFormData(prev => ({
+                                    ...prev,
+                                    fullName: userData.name,
+                                    email: userData.email
+                                }));
+
+                                setIsGoogleModalOpen(false);
+                                localStorage.setItem('registeredUser', userData.name);
+                                setTimeout(() => navigate('/welcome'), 800);
+                            } else {
+                                alert(backendData.error || 'Backend synchronization failed');
+                            }
                         } catch (err) {
                             console.error('Failed to fetch user info:', err);
                             alert('Google login failed. Please try again.');
@@ -325,11 +341,11 @@ const Register = () => {
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <InputLine icon={<FaUser />} label={t.fields.name} name="fullName" type="text" placeholder="Kumar Sangakkara" value={formData.fullName} onChange={handleChange} error={errors.fullName} mode={mode} />
-                            <InputLine icon={<FaCalendarAlt />} label={t.fields.bday} name="birthday" type="date" value={formData.birthday} onChange={handleChange} error={errors.birthday} mode={mode} />
+                            <InputLine icon={<FaCalendarAlt />} label={t.fields.bday} name="birthday" type="date" value={formData.birthday} onChange={handleChange} error={errors.birthday} mode={mode} max={new Date().toISOString().split('T')[0]} />
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <InputLine icon={<FaPhone />} label={t.fields.contact} name="contactNo" type="tel" placeholder="+94 XX XXX XXXX" value={formData.contactNo} onChange={handleChange} error={errors.contactNo} mode={mode} />
+                            <InputLine icon={<FaPhone />} label={t.fields.contact} name="contactNo" type="tel" placeholder="077 123 4567" value={formData.contactNo} onChange={handleChange} error={errors.contactNo} mode={mode} />
                             <InputLine icon={<FaEnvelope />} label={t.fields.email} name="email" type="email" placeholder="name@example.com" value={formData.email} onChange={handleChange} error={errors.email} mode={mode} />
                         </div>
 
@@ -393,11 +409,11 @@ const SocialButton = ({ icon, mode, onClick }) => (
     </button>
 );
 
-const InputLine = ({ icon, label, name, type, placeholder, value, onChange, error, mode }) => (
+const InputLine = ({ icon, label, name, type, placeholder, value, onChange, error, mode, ...props }) => (
     <div className="relative pb-1 group flex flex-col">
         <label className={`text-[10px] font-bold uppercase tracking-widest pl-1 mb-1 transition-colors ${error ? 'text-red-400' : mode === 'dark' ? 'text-teal-300' : 'text-slate-500'}`}>{label}</label>
         <div className={`flex items-center gap-3 border-b-2 transition-all ${error ? 'border-red-400/50' : mode === 'dark' ? 'border-white/10 focus-within:border-teal-400' : 'border-slate-200 focus-within:border-slate-400'}`}>
-            <input type={type} name={name} placeholder={placeholder} value={value} onChange={onChange} className={`w-full bg-transparent font-medium py-2 focus:outline-none placeholder:opacity-30 ${mode === 'dark' ? 'text-white placeholder:text-white' : 'text-slate-900 placeholder:text-slate-400'}`} />
+            <input type={type} name={name} placeholder={placeholder} value={value} onChange={onChange} className={`w-full bg-transparent font-medium py-2 focus:outline-none placeholder:opacity-30 ${mode === 'dark' ? 'text-white placeholder:text-white' : 'text-slate-900 placeholder:text-slate-400'}`} {...props} />
             <div className={`transition-colors pr-1 ${error ? 'text-red-400' : mode === 'dark' ? 'text-teal-300/40 group-focus-within:text-teal-300' : 'text-slate-400 group-focus-within:text-slate-600'}`}>{icon}</div>
         </div>
         <AnimatePresence>
