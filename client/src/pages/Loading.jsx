@@ -2,10 +2,18 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import loadingBg from '../assets/loading-bg.png';
+import loadingBgMobile from '../assets/loading-bg-mobile.png';
 
 const Loading = () => {
     const navigate = useNavigate();
     const [progress, setProgress] = useState(0);
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     useEffect(() => {
         const queryParams = new URLSearchParams(window.location.search);
@@ -40,28 +48,15 @@ const Loading = () => {
             className="relative h-screen w-full flex flex-col items-center justify-center overflow-hidden"
         >
             {/* Background Image with Overlay */}
-            <div
-                className="absolute inset-0 z-0 overflow-hidden"
-                style={{
-                    background: 'linear-gradient(135deg, #0a1628 0%, #0d2b55 50%, #0a1628 100%)',
+            <div 
+                className="absolute inset-0 z-0"
+                style={{ 
+                    backgroundImage: `url(${isMobile ? loadingBgMobile : loadingBg})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center'
                 }}
             >
-                <img
-                    src={loadingBg}
-                    alt="background"
-                    style={{
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        width: '100%',
-                        height: 'auto',
-                        minHeight: '100%',
-                        objectFit: 'contain',
-                        objectPosition: 'center center',
-                    }}
-                />
-                <div className="absolute inset-0 bg-black/30"></div>
+                <div className="absolute inset-0 bg-black/40"></div>
             </div>
 
             <div className="relative z-10 flex flex-col items-center">
