@@ -52,11 +52,13 @@ const Loading = () => {
                 className="absolute inset-0 z-0"
                 style={{ 
                     backgroundImage: `url(${isMobile ? loadingBgMobile : loadingBg})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center'
+                    backgroundSize: isMobile ? 'contain' : 'cover',
+                    backgroundPosition: 'center center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundColor: isMobile ? '#0d4b8e' : 'transparent',
                 }}
             >
-                <div className="absolute inset-0 bg-black/40"></div>
+                <div className="absolute inset-0 bg-black/30"></div>
             </div>
 
             <div className="relative z-10 flex flex-col items-center">
