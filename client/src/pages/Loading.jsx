@@ -40,20 +40,28 @@ const Loading = () => {
             className="relative h-screen w-full flex flex-col items-center justify-center overflow-hidden"
         >
             {/* Background Image with Overlay */}
-            <div className="absolute inset-0 z-0 overflow-hidden">
+            <div
+                className="absolute inset-0 z-0 overflow-hidden"
+                style={{
+                    background: 'linear-gradient(135deg, #0a1628 0%, #0d2b55 50%, #0a1628 100%)',
+                }}
+            >
                 <img
                     src={loadingBg}
                     alt="background"
                     style={{
                         position: 'absolute',
-                        inset: 0,
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
                         width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
+                        height: 'auto',
+                        minHeight: '100%',
+                        objectFit: 'contain',
                         objectPosition: 'center center',
                     }}
                 />
-                <div className="absolute inset-0 bg-black/40"></div>
+                <div className="absolute inset-0 bg-black/30"></div>
             </div>
 
             <div className="relative z-10 flex flex-col items-center">
