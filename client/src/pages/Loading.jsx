@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import loadingDots from '../assets/Loading Dots Blue.lottie';
 import loadingBg from '../assets/loading-bg.png';
 
 const Loading = () => {
@@ -54,23 +52,11 @@ const Loading = () => {
             </div>
 
             <div className="relative z-10 flex flex-col items-center">
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.5 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="w-48 h-48 mb-8"
-                >
-                    <DotLottieReact
-                        src={loadingDots}
-                        loop
-                        autoplay
-                    />
-                </motion.div>
-
-                <div className="flex gap-2 mb-4">
-                    {[0, 1, 2].map((i) => (
+                <div className="flex gap-4 mb-4">
+                    {[0, 1, 2, 3, 4, 5].map((i) => (
                         <motion.div
                             key={i}
-                            className="w-3 h-3 bg-white rounded-full shadow-lg"
+                            className="w-5 h-5 bg-white rounded-full shadow-lg"
                             animate={{
                                 opacity: [0.3, 1, 0.3],
                                 scale: [0.8, 1.2, 0.8]
@@ -78,7 +64,7 @@ const Loading = () => {
                             transition={{
                                 duration: 1,
                                 repeat: Infinity,
-                                delay: i * 0.2
+                                delay: i * 0.15
                             }}
                         />
                     ))}
