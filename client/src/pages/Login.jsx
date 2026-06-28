@@ -98,7 +98,7 @@ const Login = () => {
 
                 if (data.success) {
                     localStorage.setItem('registeredUser', data.user.fullName);
-                    navigate('/loading?to=/welcome');
+                    navigate('/loading?to=/home');
                 } else {
                     alert(data.error || 'Login failed');
                 }
@@ -157,7 +157,7 @@ const Login = () => {
                             setFormData(prev => ({ ...prev, email: userData.email }));
                             setIsGoogleModalOpen(false);
                             localStorage.setItem('registeredUser', userData.name);
-                            setTimeout(() => navigate('/loading?to=/welcome'), 800);
+                            setTimeout(() => navigate('/loading?to=/home'), 800);
                         } else {
                             alert(backendData.error || 'Backend synchronization failed');
                         }
@@ -180,7 +180,7 @@ const Login = () => {
 
         setFormData(prev => ({ ...prev, email: account.email }));
         setIsGoogleModalOpen(false);
-        setTimeout(() => navigate('/loading?to=/welcome'), 800);
+        setTimeout(() => navigate('/loading?to=/home'), 800);
     };
 
     const handleAddAccount = () => {
