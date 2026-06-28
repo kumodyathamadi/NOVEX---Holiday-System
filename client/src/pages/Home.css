@@ -161,14 +161,27 @@
 .hd-logo {
   display: flex;
   align-items: center;
+  gap: 10px;
   cursor: pointer;
   user-select: none;
+  text-decoration: none;
 }
 .hd-company-logo {
   height: 44px;
   width: auto;
-  border-radius: 8px; /* Optional, looks good for jpeg logos */
+  border-radius: 8px;
   object-fit: contain;
+}
+.hd-logo-name {
+  font-family: var(--hd-font-display);
+  font-weight: 800;
+  font-size: 1.25rem;
+  color: var(--text);
+  letter-spacing: -0.3px;
+  line-height: 1;
+}
+.hd-logo-dot {
+  color: var(--accent-color, #17A2B8);
 }
 
 /* Nav Center */
@@ -252,9 +265,9 @@
   top: calc(100% + 10px);
   left: 0;
   min-width: 190px;
-  background: var(--surface-2);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: var(--nav-scrolled);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid var(--border);
   border-radius: 18px;
   padding: 12px;
@@ -896,6 +909,7 @@
 .hd-footer-logo {
   display: flex;
   align-items: center;
+  gap: 12px;
   margin-bottom: 20px;
 }
 .hd-company-logo-footer {
@@ -903,6 +917,17 @@
   width: auto;
   border-radius: 8px;
   object-fit: contain;
+}
+.hd-footer-brand-name {
+  font-family: var(--hd-font-display);
+  font-weight: 800;
+  font-size: 1.5rem;
+  color: #fff;
+  letter-spacing: -0.3px;
+  line-height: 1;
+}
+.hd-footer-dot {
+  color: #fbbf24;
 }
 .hd-footer-tagline {
   color: rgba(255 255 255 / 0.45);

@@ -20,6 +20,7 @@ import travelImg from '../assets/card_travel.png';
 import moviesImg from '../assets/card_movies.png';
 import functionsImg from '../assets/card_functions.png';
 import logoImg from '../assets/logooo.jpeg';
+import offerImg from '../assets/offer.jpg';
 
 import LiquidCursor from '../components/LiquidCursor';
 import TypewriterText from '../components/TypewriterText';
@@ -96,7 +97,7 @@ const SERVICES = [
     label: 'OFFERS',
     subtitle: 'Exclusive deals for you',
     icon: <FaGift />,
-    img: null,
+    img: offerImg,
     gradient: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
     glow: '0 0 40px rgba(229,57,53,0.6)',
     tag: 'SALE',
@@ -366,6 +367,7 @@ const Home = () => {
             transition={{ delay: 0.2, duration: 0.6 }}
           >
             <img src={logoImg} alt="Holiday.lk Logo" className="hd-company-logo" />
+            <span className="hd-logo-name">Holiday<span className="hd-logo-dot">.lk</span></span>
           </motion.div>
         </div>
 
@@ -654,6 +656,7 @@ const Home = () => {
           <div className="hd-footer-brand">
             <div className="hd-footer-logo">
               <img src={logoImg} alt="Holiday.lk Logo" className="hd-company-logo-footer" />
+              <span className="hd-footer-brand-name">Holiday<span className="hd-footer-dot">.lk</span></span>
             </div>
             <p className="hd-footer-tagline">Sri Lanka's Premier Travel & Lifestyle Platform</p>
             <div className="hd-footer-socials">
