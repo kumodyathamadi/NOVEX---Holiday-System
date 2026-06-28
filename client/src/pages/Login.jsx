@@ -243,8 +243,8 @@ const Login = () => {
                 <div className="w-full lg:w-3/5 p-8 md:p-14 flex flex-col justify-center relative">
                     <div className="absolute top-6 left-8 right-8 flex justify-between items-center z-30">
                         <div className="flex gap-2">
-                            {['SI', 'EN', 'TA'].map(l => (
-                                <button key={l} onClick={() => setLang(l)} className={`px-3 py-1.5 text-[10px] font-bold rounded-full border transition-all ${lang === l ? 'bg-theme-btn text-white border-transparent' : mode === 'dark' ? 'bg-white/5 border-white/10 text-teal-200 hover:bg-white/10' : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'}`}>{l}</button>
+                            {[{ code: 'SI', label: 'සි' }, { code: 'EN', label: 'EN' }, { code: 'TA', label: 'த' }].map(({ code, label }) => (
+                                <button key={code} onClick={() => setLang(code)} className={`px-3 py-1.5 text-[10px] font-bold rounded-full border transition-all ${lang === code ? 'bg-theme-btn text-white border-transparent' : mode === 'dark' ? 'bg-white/5 border-white/10 text-teal-200 hover:bg-white/10' : 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200'}`}>{label}</button>
                             ))}
                         </div>
                         <div className="flex gap-3 items-center">
